@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S.T.A.L.K.E.R. 2 — Інтерактивна Карта</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="stalker-side-panel" style="display:none">
+  <button id="panel-collapse-btn" onclick="toggleSidePanel()" title="Згорнути панель">
+    <img id="panel-collapse-icon" src="images/panel_arrow.png" alt="<">
+  </button>
+  <div id="panel-inner">
+  <div class="panel-section-title">ПОШУК</div>
+
+  <input type="text" id="stalker-search" placeholder="Назва об'єкта..."
+         oninput="MapModule.setSearch(this.value)" />
+
+  <div class="panel-divider"></div>
+
+  <div class="panel-section-title">Основні мітки</div>
+
+  <!-- Локації -->
+  <div class="panel-check layer-btn active" id="layer-btn-loc"
+       onclick="toggleLayer('loc')" title="Показати / приховати локації">
+    <img src="images/Locations/T_LocationOrigin_NotActive_Shadow.png"
+         style="width:20px;height:20px;object-fit:contain;">
+    <span>Локації</span>
+  </div>
+
+  <!-- Аномалії -->
+  <div class="panel-check layer-btn active" id="layer-btn-arc"
+       onclick="toggleLayer('arc')" title="Показати / приховати аномалії">
+    <img src="images/Archanomaly/Texture_Archianomaly_NotActive_General_Shadow.png"
+         style="width:20px;height:20px;object-fit:contain;">
+    <span>Аномалії</span>
+  </div>
+
+  <!-- Артефакти -->
+  <div class="panel-check layer-btn active" id="layer-btn-art"
+       onclick="toggleLayer('art')" title="Показати / приховати артефакти">
+    <img src="images/artifacts/T_reward_icon_artifact.png"
+         style="width:20px;height:20px;object-fit:contain;">
+    <span>Артефакти</span>
+  </div>
+  </div><!-- /panel-inner -->
+</div>
+
+
+<div id="app">
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div>
+      <div class="logo">S.T.A.L.K.E.R. 2 — Heart of Chornobyl</div>
+      <div class="subtitle">Зона відчуження · I.P.S.F. M-36-25 · Інтерактивна карта</div>
+    </div>
+    <div class="warn-badge">&#9888; BEWARE RADIATION</div>
+  </div>
+
+  <!-- Navigation -->
+  <div id="nav">
+    <button class="nav-btn active" onclick="switchPane('map')">Карта</button>
+    <button class="nav-btn"        onclick="switchPane('list')">Список</button>
+    <button class="nav-btn"        onclick="switchPane('stats')">Статистика</button>
+  </div>
+
+  <!-- ══════════════ MAP PANE ══════════════ -->
+  <div id="map-pane" class="pane active">
+    <div id="main">
+
+      <!-- Leaflet map container -->
+      <div id="map-wrap">
+        <div id="leaflet-map"></div>
+
+        <!-- Zoom controls -->
+        <div class="map-controls">
+          <button class="map-btn" onclick="MapModule.zoom(1.5)"   title="Збільшити">+</button>
+          <button class="map-btn" onclick="MapModule.zoom(0.5)"   title="Зменшити">−</button>
+          <button class="map-btn" onclick="MapModule.resetView()" title="Скинути вигляд">&#8635;</button>
+          <button class="map-btn edit-toggle-btn" id="edit-toggle-btn" onclick="MapModule.toggleEditMode()" title="Режим розміщення міток">✛</button>
+        </div>
+
+        <!-- Edit mode banner -->
+        <div id="edit-mode-banner" style="display:none">
+          ✛ РЕЖИМ РОЗМІЩЕННЯ — клікни по карті щоб додати мітку
+          <button onclick="MapModule.toggleEditMode()">Вийти</button>
+        </div>
+
+        <!-- Placement modal -->
+        <div id="placement-modal" style="display:none">
+          <div class="pm-box">
+            <div class="pm-title">✛ НОВА МІТКА</div>
+            <div class="pm-coords" id="pm-coords"></div>
+            <div class="pm-fields">
+              <label>Тип</label>
+              <select id="pm-type" onchange="MapModule._pmTypeChange()">
+                <option value="artifact">Артефакт</option>
+                <option value="archanomaly">Архо-аномалія</option>
+                <option value="location">Локація</option>
+              </select>
+              <label>Назва</label>
+              <input id="pm-name" type="text" placeholder="Назва..." oninput="MapModule._pmUpdateJson()">
+              <label>Регіон</label>
+              <input id="pm-zone" type="text" placeholder="Регіон..." oninput="MapModule._pmUpdateJson()">
+              <label>Опис</label>
+              <textarea id="pm-desc" rows="2" placeholder="Опис..." oninput="MapModule._pmUpdateJson()"></textarea>
+              <div id="pm-artifact-fields">
+                <label>Рідкість</label>
+                <input id="pm-rarity" type="text" placeholder="Звичайний / Рідкісний..." oninput="MapModule._pmUpdateJson()">
+                <label>Файл іконки</label>
+                <input id="pm-icon" type="text" placeholder="назва.png" oninput="MapModule._pmUpdateJson()">
+              </div>
+            </div>
+            <div class="pm-json-label">📋 Скопіюй у data.json:</div>
+            <textarea class="pm-json" id="pm-json" rows="6" readonly></textarea>
+            <div class="pm-actions">
+              <button class="pm-btn-copy"   onclick="MapModule._pmCopy()">Копіювати JSON</button>
+              <button class="pm-btn-place"  onclick="MapModule._pmPlace()">Додати на карту</button>
+              <button class="pm-btn-cancel" onclick="MapModule._pmCancel()">Скасувати</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /map-wrap -->
+
+    </div>
+
+
+  </div>
+  <!-- /map-pane -->
+
+  <!-- ══════════════ LIST PANE ══════════════ -->
+  <div id="list-pane" class="pane">
+    <div class="pane-title">Всі об'єкти Зони</div>
+
+    <div class="list-filters">
+      <input
+        class="filter-search"
+        id="list-search"
+        style="max-width:240px"
+        placeholder="Пошук по назві чи опису..."
+        oninput="ChartsModule.renderList(this.value)"
+      >
+      <button class="type-btn active" data-type="all" onclick="ChartsModule.setListFilter('all')">Всі</button>
+      <button class="type-btn"        data-type="loc" onclick="ChartsModule.setListFilter('loc')">Локації</button>
+      <button class="type-btn"        data-type="arc" onclick="ChartsModule.setListFilter('arc')">Архіаномалії</button>
+      <button class="type-btn"        data-type="art" onclick="ChartsModule.setListFilter('art')">Артефакти</button>
+    </div>
+    <div class="zone-filter-bar" id="zone-filter-bar"></div>
+
+    <div class="list-grid" id="list-grid">
+      <div style="color:var(--text-dim);font-size:12px">Завантаження...</div>
+    </div>
+  </div>
+  <!-- /list-pane -->
+
+  <!-- ══════════════ STATS PANE ══════════════ -->
+  <div id="stats-pane" class="pane">
+    <div class="pane-title">Статистика Регіонів</div>
+    <div class="stat-row" id="stat-cards"></div>
+    <div id="stat-bars"></div>
+  </div>
+  <!-- /stats-pane -->
+
+</div>
+<!-- /app -->
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="regions.js"></script>
+<script src="map.js"></script>
+<script src="charts.js"></script>
+<script>
+  /* ── Global state ── */
+  window.APP_DATA = null;
+
+  /* ── Pane switcher ── */
+  function switchPane(name) {
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(name + '-pane').classList.add('active');
+    const idx = ['map', 'list', 'stats'].indexOf(name);
+    document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+
+    if (name === 'list')  ChartsModule.renderList('');
+    if (name === 'stats') ChartsModule.renderStats();
+
+    const panel = document.getElementById('stalker-side-panel');
+    if (panel) panel.style.display = name === 'map' ? '' : 'none';
+  }
+
+  /* ── Load data & init ── */
+  fetch('data.json')
+    .then(r => r.json())
+    .then(data => {
+      window.APP_DATA = data;
+      MapModule.init();
+      updateLayerCounts();
+      document.getElementById('stalker-side-panel').style.display = '';
+    })
+    .catch(err => {
+      console.error('Помилка завантаження даних:', err);
+      document.getElementById('marker-count').textContent = 'Помилка завантаження даних';
+    });
+
+    function toggleLayer(type) {
+  MapModule.toggleMarkerLayer(type);
+  const btn = document.getElementById('layer-btn-' + type);
+  if (btn) btn.classList.toggle('active');
+}
+
+function toggleSidePanel() {
+  const panel = document.getElementById('stalker-side-panel');
+  const icon  = document.getElementById('panel-collapse-icon');
+  const collapsed = panel.classList.toggle('collapsed');
+  icon.classList.toggle('flipped', collapsed);
+}
+
+function updateLayerCounts() {
+  const d = window.APP_DATA;
+  if (!d) return;
+  const counts = {
+    loc: (d.locations   || []).length,
+    arc: (d.archanomaly || []).length,
+    art: (d.artifacts   || []).length,
+  };
+  Object.keys(counts).forEach(type => {
+    const el = document.getElementById('layer-count-' + type);
+    if (el) el.textContent = counts[type];
+  });
+}
+</script>
+</body>
+</html>

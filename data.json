@@ -137,7 +137,7 @@
       "zone": "Цементний завод",
       "description": "Цементний завод побудували для ліквідації наслідків першої аварії на ЧАЕС. Тепер і він, і його околиці перебувають під контролем «Долгу». Нехай угруповання і втратило колишню впливовість, але досі бореться із Зоною та її породженнями.",
       "icon": "T_LocationOrigin_NotActive_Shadow.png",
-      "image": "Cement-plant.jpg",
+      "image": "Cement-Plant.jpg",
       "coords": [
         -237,
         311.63
@@ -150,7 +150,7 @@
       "zone": "Цементний завод",
       "description": "Лабіринт високих бетонних плит, де легко загубитися навіть удень.",
       "icon": "T_LocationOrigin_NotActive_Shadow.png",
-      "image": "Concrete-forest.jpg",
+      "image": "Concrete-Forest.jpg",
       "coords": [
         -253.93,
         320.69
